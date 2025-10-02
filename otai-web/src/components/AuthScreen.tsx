@@ -37,7 +37,8 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    // Note: Password is collected but not verified in this prototype
+    // In a real app, you'd hash and verify passwords
     const name = formData.get("name") as string;
 
     try {

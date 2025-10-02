@@ -22,7 +22,6 @@ interface ChatScreenProps {
 
 export function ChatScreen({
   user,
-  accessToken,
   onSignOut,
   onShowProviderDashboard,
 }: ChatScreenProps) {
@@ -34,6 +33,7 @@ export function ChatScreen({
   // Load chat history on component mount
   useEffect(() => {
     loadChatHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Auto-scroll to bottom when new messages arrive

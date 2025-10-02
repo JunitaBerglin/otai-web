@@ -67,7 +67,8 @@ export const sendMessageToGemini = async (
     const conversationHistory = chatHistory
       .slice(-10)
       .map((msg) => {
-        const role = msg.role.email ? "user" : "model";
+        const role =
+          typeof msg.role === "object" && msg.role.email ? "user" : "model";
         return `${role}: ${msg.content}`;
       })
       .join("\n");

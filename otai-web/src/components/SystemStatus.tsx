@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { AlertTriangle, CheckCircle } from "lucide-react";
-import { projectId, publicAnonKey } from "../otai-web/utils/supabase/info";
+import { isGeminiConfigured } from "../services/geminiService";
 
 interface SystemStatusProps {
   className?: string;
@@ -21,31 +21,22 @@ export function SystemStatus({ className = "" }: SystemStatusProps) {
 
   const checkSystemStatus = async () => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-9789410f/health`,
-        {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      // Check if Gemini API is configured
+      const geminiConfigured = isGeminiConfigured();
 
-      if (response.ok) {
-        const data = await response.json();
-        setStatus(data);
-      } else {
-        setStatus({
-          ok: false,
-          openai_configured: false,
-          message: "Servern svarar inte",
-        });
-      }
+      setStatus({
+        ok: geminiConfigured,
+        openai_configured: geminiConfigured,
+        message: geminiConfigured
+          ? "Gemini AI är konfigurerad och redo"
+          : "Gemini API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY i .env-filen.",
+      });
     } catch (error) {
       console.error("System status check failed:", error);
       setStatus({
         ok: false,
         openai_configured: false,
-        message: "Kan inte kontakta servern",
+        message: "Kunde inte kontrollera systemstatus",
       });
     } finally {
       setIsLoading(false);

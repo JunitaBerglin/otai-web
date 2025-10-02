@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { User, Bot, Calendar, Clock, ArrowLeft } from "lucide-react";
-import { projectId } from "../otai-web/utils/supabase/info";
+import { getAllUsers, getMessages } from "../services/localStorage";
 
 interface Message {
   id: string;
@@ -31,10 +31,7 @@ interface ProviderDashboardProps {
   onBack: () => void;
 }
 
-export function ProviderDashboard({
-  accessToken,
-  onBack,
-}: ProviderDashboardProps) {
+export function ProviderDashboard({ onBack }: ProviderDashboardProps) {
   const [userSessions, setUserSessions] = useState<UserSession>({});
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -44,22 +41,26 @@ export function ProviderDashboard({
   }, []);
 
   const loadAssessments = async () => {
+    // TODO: Implement provider dashboard with localStorage
+    // For now, just show a placeholder
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-9789410f/provider/assessments`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const users = getAllUsers();
+      const sessions: UserSession = {};
 
-      if (response.ok) {
-        const data = await response.json();
-        setUserSessions(data.userSessions || {});
-      } else {
-        console.error("Failed to load assessments");
-      }
+      users.forEach((user) => {
+        const messages = getMessages(user.id);
+        if (messages.length > 0) {
+          sessions[user.id] = messages.map((msg) => ({
+            id: msg.id,
+            userId: user.id,
+            message: msg.content,
+            role: msg.role === "assistant" ? "assistant" : "user",
+            timestamp: msg.timestamp,
+          }));
+        }
+      });
+
+      setUserSessions(sessions);
     } catch (error) {
       console.error("Error loading assessments:", error);
     } finally {
