@@ -51,9 +51,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-3xl text-primary font-bold">
-            Hej! Jag är OTAI
-          </h1>
+          <h1 className="text-3xl text-primary font-bold">Hej! Jag är OTAI</h1>
 
           <p className="text-primary leading-relaxed text-base">
             Berätta gärna om dina utmaningar i vardagen, så hjälper jag dig med
