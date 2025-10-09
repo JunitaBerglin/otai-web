@@ -42,7 +42,6 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
     const name = formData.get("name") as string;
 
     try {
-      // Check if user already exists
       const existingUser = findUserByEmail(email);
       if (existingUser) {
         throw new Error("En användare med denna e-post finns redan");
@@ -56,7 +55,6 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
         userType: userType as "patient" | "provider",
       };
 
-      // Save user
       saveUser(newUser);
       saveCurrentUser(newUser);
 
