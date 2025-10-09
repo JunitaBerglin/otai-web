@@ -72,8 +72,8 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
 
         <Button
           onClick={onGetStarted}
-          variant={"default"}
-          className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-full shadow-lg transition-all duration-200 hover:shadow-xl w-full"
+          variant="default"
+          className="px-8 py-6 text-lg rounded-full w-full"
         >
           KOM IGÅNG
         </Button>

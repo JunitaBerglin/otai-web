@@ -111,7 +111,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
       <Button
         variant="ghost"
         onClick={onBack}
-        className="self-start mb-6 text-primary hover:bg-secondary"
+        className="self-start mb-6"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Tillbaka
@@ -173,7 +173,8 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-primary hover:bg-primary/90 rounded-full py-6"
+                      variant="default"
+                      className="w-full rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Loggar in..." : "Logga in"}
@@ -244,7 +245,8 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-primary hover:bg-primary/90 rounded-full py-6"
+                      variant="default"
+                      className="w-full rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Skapar konto..." : "Skapa konto"}

@@ -197,7 +197,7 @@ export function ChatScreen({
                 variant="ghost"
                 size="sm"
                 onClick={onShowProviderDashboard}
-                className="text-white hover:bg-white/10"
+                className="text-white hover:bg-white/20"
               >
                 <Users className="w-4 h-4" />
                 <span className="hidden sm:inline ml-2">Dashboard</span>
@@ -207,7 +207,7 @@ export function ChatScreen({
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-white/20"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline ml-2">Logga ut</span>
@@ -273,13 +273,11 @@ export function ChatScreen({
 
                   <div
                     className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
-                      isUser
-                        ? "text-white rounded-br-sm"
-                        : "rounded-bl-sm"
+                      isUser ? "text-white rounded-br-sm" : "rounded-bl-sm"
                     }`}
                     style={{
-                      backgroundColor: isUser ? '#213E35' : '#F8E6EC',
-                      color: isUser ? 'white' : '#213E35'
+                      backgroundColor: isUser ? "#213E35" : "#F8E6EC",
+                      color: isUser ? "white" : "#213E35",
                     }}
                   >
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
@@ -339,9 +337,9 @@ export function ChatScreen({
             />
             <Button
               type="submit"
-              variant={"default"}
+              variant="default"
               disabled={isLoading || !inputMessage.trim()}
-              className="bg-primary hover:bg-primary/90 rounded-full px-6 h-12 w-12 p-0 flex items-center justify-center"
+              className="rounded-full h-12 w-12 p-0 flex items-center justify-center"
             >
               <Send className="w-5 h-5" />
             </Button>
