@@ -172,32 +172,32 @@ export function ChatScreen({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-slate-200 p-4">
+      <div className="bg-[#213E35] shadow-md p-4">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-[#1C3D32] rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+              <Bot className="w-6 h-6 text-[#213E35]" />
             </div>
             <div>
-              <h1 className="font-semibold text-[#1C3D32]">OTAI</h1>
-              <p className="text-sm text-slate-600">
+              <h1 className="font-semibold text-white text-lg">OTAI</h1>
+              <p className="text-sm text-white/80">
                 Arbetsterapeutisk AI-assistent
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-slate-600 hidden sm:block">
-              Välkommen, {user?.name || user?.email}
+            <span className="text-sm text-white/80 hidden sm:block">
+              {user?.name || user?.email}
             </span>
             {user?.userType === "provider" && onShowProviderDashboard && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onShowProviderDashboard}
-                className="text-slate-600 hover:text-[#1C3D32]"
+                className="text-white hover:bg-white/10"
               >
                 <Users className="w-4 h-4" />
                 <span className="hidden sm:inline ml-2">Dashboard</span>
@@ -207,7 +207,7 @@ export function ChatScreen({
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="text-slate-600 hover:text-[#1C3D32]"
+              className="text-white hover:bg-white/10"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline ml-2">Logga ut</span>
@@ -264,26 +264,26 @@ export function ChatScreen({
                   }`}
                 >
                   {!isUser && (
-                    <Avatar className="w-8 h-8 bg-[#1C3D32]">
-                      <AvatarFallback className="bg-[#1C3D32] text-white text-xs">
+                    <Avatar className="w-8 h-8 bg-[#213E35] flex-shrink-0">
+                      <AvatarFallback className="bg-[#213E35] text-white text-xs">
                         <Bot className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
                   )}
 
                   <div
-                    className={`max-w-[80%] p-4 rounded-2xl ${
+                    className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
                       isUser
-                        ? "bg-[#1C3D32] text-white rounded-br-md"
-                        : "bg-white border border-slate-200 rounded-bl-md shadow-sm"
+                        ? "bg-[#213E35] text-white rounded-br-sm"
+                        : "bg-[#F8E6EC] text-[#213E35] rounded-bl-sm"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
                     <p
-                      className={`text-xs mt-2 ${
-                        isUser ? "text-green-100" : "text-slate-500"
+                      className={`text-xs mt-1.5 ${
+                        isUser ? "text-green-100/70" : "text-[#213E35]/60"
                       }`}
                     >
                       {formatTime(message.timestamp)}
@@ -291,8 +291,8 @@ export function ChatScreen({
                   </div>
 
                   {isUser && (
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="bg-slate-300 text-slate-600 text-xs">
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarFallback className="bg-[#213E35] text-white text-xs">
                         <User className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
@@ -303,16 +303,16 @@ export function ChatScreen({
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <Avatar className="w-8 h-8 bg-[#1C3D32]">
-                  <AvatarFallback className="bg-[#1C3D32] text-white text-xs">
+                <Avatar className="w-8 h-8 bg-[#213E35] flex-shrink-0">
+                  <AvatarFallback className="bg-[#213E35] text-white text-xs">
                     <Bot className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md shadow-sm p-4">
+                <div className="bg-[#F8E6EC] rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce"></div>
                   </div>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export function ChatScreen({
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="border-t border-slate-200 bg-white p-4">
+        <div className="border-t border-slate-200 bg-white p-4 shadow-lg">
           <form
             onSubmit={handleSendMessage}
             className="flex gap-3 max-w-3xl mx-auto"
@@ -331,14 +331,14 @@ export function ChatScreen({
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Skriv ditt meddelande här..."
               disabled={isLoading}
-              className="flex-1 rounded-2xl border-slate-300 focus:border-[#1C3D32] focus:ring-[#1C3D32]"
+              className="flex-1 rounded-full border-slate-300 bg-slate-50 focus:border-[#213E35] focus:ring-[#213E35] px-5 py-6"
             />
             <Button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
-              className="bg-[#1C3D32] hover:bg-[#2A5A47] rounded-2xl px-6"
+              className="bg-[#213E35] hover:bg-[#2d5548] rounded-full px-6 h-12 w-12 p-0 flex items-center justify-center"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             </Button>
           </form>
 

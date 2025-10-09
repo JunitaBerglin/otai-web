@@ -107,11 +107,11 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col p-6">
+    <div className="min-h-screen bg-white flex flex-col p-6">
       <Button
         variant="ghost"
         onClick={onBack}
-        className="self-start mb-6 text-[#1C3D32] hover:bg-[#F9E6EC]"
+        className="self-start mb-6 text-[#213E35] hover:bg-[#F8E6EC]"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Tillbaka
@@ -119,13 +119,13 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md space-y-6">
-          <div className="text-center">
-            <OTAILogo className="mx-auto scale-75" />
+          <div className="text-center flex justify-center">
+            <OTAILogo className="scale-75" />
           </div>
 
           <Card className="border-0 shadow-xl">
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-[#1C3D32]">
+              <CardTitle className="text-[#213E35] text-2xl font-bold">
                 Välkommen till OTAI
               </CardTitle>
               <CardDescription>
@@ -173,7 +173,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#1C3D32] hover:bg-[#2A5A47]"
+                      className="w-full bg-[#213E35] hover:bg-[#2d5548] rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Loggar in..." : "Logga in"}
@@ -244,7 +244,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#1C3D32] hover:bg-[#2A5A47]"
+                      className="w-full bg-[#213E35] hover:bg-[#2d5548] rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Skapar konto..." : "Skapa konto"}
