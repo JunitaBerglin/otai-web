@@ -274,9 +274,13 @@ export function ChatScreen({
                   <div
                     className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
                       isUser
-                        ? "bg-primary text-white rounded-br-sm"
-                        : "bg-secondary text-primary rounded-bl-sm"
+                        ? "text-white rounded-br-sm"
+                        : "rounded-bl-sm"
                     }`}
+                    style={{
+                      backgroundColor: isUser ? '#213E35' : '#F8E6EC',
+                      color: isUser ? 'white' : '#213E35'
+                    }}
                   >
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
                       {message.content}
@@ -335,6 +339,7 @@ export function ChatScreen({
             />
             <Button
               type="submit"
+              variant={"default"}
               disabled={isLoading || !inputMessage.trim()}
               className="bg-primary hover:bg-primary/90 rounded-full px-6 h-12 w-12 p-0 flex items-center justify-center"
             >
