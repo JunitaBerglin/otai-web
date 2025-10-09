@@ -111,7 +111,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
       <Button
         variant="ghost"
         onClick={onBack}
-        className="self-start mb-6 text-[#213E35] hover:bg-[#F8E6EC]"
+        className="self-start mb-6 text-primary hover:bg-secondary"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Tillbaka
@@ -125,7 +125,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
           <Card className="border-0 shadow-xl">
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-[#213E35] text-2xl font-bold">
+              <CardTitle className="text-primary text-2xl font-bold">
                 Välkommen till OTAI
               </CardTitle>
               <CardDescription>
@@ -173,7 +173,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#213E35] hover:bg-[#2d5548] rounded-full py-6"
+                      className="w-full bg-primary hover:bg-primary/90 rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Loggar in..." : "Logga in"}
@@ -244,7 +244,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#213E35] hover:bg-[#2d5548] rounded-full py-6"
+                      className="w-full bg-primary hover:bg-primary/90 rounded-full py-6"
                       disabled={isLoading}
                     >
                       {isLoading ? "Skapar konto..." : "Skapa konto"}

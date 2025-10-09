@@ -51,21 +51,21 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-3xl text-[#213E35] font-bold">
+          <h1 className="text-3xl text-primary font-bold">
             Hej! Jag är OTAI
           </h1>
 
-          <p className="text-[#213E35] leading-relaxed text-base">
+          <p className="text-primary leading-relaxed text-base">
             Berätta gärna om dina utmaningar i vardagen, så hjälper jag dig med
             arbetsterapeutiska förslag och strategier.
           </p>
         </div>
 
-        <div className="bg-[#F8E6EC] p-6 rounded-2xl space-y-3">
-          <p className="text-[#213E35] font-semibold text-sm">
+        <div className="bg-secondary p-6 rounded-2xl space-y-3">
+          <p className="text-primary font-semibold text-sm">
             Exempel på vad du kan fråga:
           </p>
-          <div className="text-[#213E35] text-sm space-y-2 text-left">
+          <div className="text-primary text-sm space-y-2 text-left">
             <p>"Jag har svårt att komma ihåg att ta mina mediciner"</p>
             <p>"Jag får ont i ryggen när jag städar"</p>
             <p>"Mitt barn har svårt att koncentrera sig på läxorna"</p>
@@ -74,7 +74,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
 
         <Button
           onClick={onGetStarted}
-          className="bg-[#213E35] hover:bg-[#2d5548] text-white px-8 py-6 text-lg rounded-full shadow-lg transition-all duration-200 hover:shadow-xl w-full"
+          className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg rounded-full shadow-lg transition-all duration-200 hover:shadow-xl w-full"
         >
           KOM IGÅNG
         </Button>

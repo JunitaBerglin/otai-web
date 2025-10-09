@@ -174,11 +174,11 @@ export function ChatScreen({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="bg-[#213E35] shadow-md p-4">
+      <div className="bg-primary shadow-md p-4">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-[#213E35]" />
+              <Bot className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="font-semibold text-white text-lg">OTAI</h1>
@@ -264,8 +264,8 @@ export function ChatScreen({
                   }`}
                 >
                   {!isUser && (
-                    <Avatar className="w-8 h-8 bg-[#213E35] flex-shrink-0">
-                      <AvatarFallback className="bg-[#213E35] text-white text-xs">
+                    <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
+                      <AvatarFallback className="bg-primary text-white text-xs">
                         <Bot className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
@@ -274,8 +274,8 @@ export function ChatScreen({
                   <div
                     className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
                       isUser
-                        ? "bg-[#213E35] text-white rounded-br-sm"
-                        : "bg-[#F8E6EC] text-[#213E35] rounded-bl-sm"
+                        ? "bg-primary text-white rounded-br-sm"
+                        : "bg-secondary text-primary rounded-bl-sm"
                     }`}
                   >
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
@@ -283,7 +283,7 @@ export function ChatScreen({
                     </p>
                     <p
                       className={`text-xs mt-1.5 ${
-                        isUser ? "text-green-100/70" : "text-[#213E35]/60"
+                        isUser ? "text-white/70" : "text-primary/60"
                       }`}
                     >
                       {formatTime(message.timestamp)}
@@ -292,7 +292,7 @@ export function ChatScreen({
 
                   {isUser && (
                     <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarFallback className="bg-[#213E35] text-white text-xs">
+                      <AvatarFallback className="bg-primary text-white text-xs">
                         <User className="w-4 h-4" />
                       </AvatarFallback>
                     </Avatar>
@@ -303,16 +303,16 @@ export function ChatScreen({
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <Avatar className="w-8 h-8 bg-[#213E35] flex-shrink-0">
-                  <AvatarFallback className="bg-[#213E35] text-white text-xs">
+                <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
+                  <AvatarFallback className="bg-primary text-white text-xs">
                     <Bot className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>
-                <div className="bg-[#F8E6EC] rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
+                <div className="bg-secondary rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-[#213E35]/40 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce"></div>
                   </div>
                 </div>
               </div>
@@ -331,12 +331,12 @@ export function ChatScreen({
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Skriv ditt meddelande här..."
               disabled={isLoading}
-              className="flex-1 rounded-full border-slate-300 bg-slate-50 focus:border-[#213E35] focus:ring-[#213E35] px-5 py-6"
+              className="flex-1 rounded-full border-slate-300 bg-slate-50 focus:border-primary focus:ring-primary px-5 py-6"
             />
             <Button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
-              className="bg-[#213E35] hover:bg-[#2d5548] rounded-full px-6 h-12 w-12 p-0 flex items-center justify-center"
+              className="bg-primary hover:bg-primary/90 rounded-full px-6 h-12 w-12 p-0 flex items-center justify-center"
             >
               <Send className="w-5 h-5" />
             </Button>
