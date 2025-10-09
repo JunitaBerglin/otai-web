@@ -11,6 +11,9 @@
   # Node.js version to use
   [build.environment]
     NODE_VERSION = "22.11.0"
+    # Disable secrets scanning for VITE_ environment variables
+    # These are meant to be included in frontend bundle for browser use
+    SECRETS_SCAN_OMIT_KEYS = "VITE_GEMINI_API_KEY"
 
 # Redirect rules for SPA (Single Page Application)
 # This ensures that all routes work correctly with React Router
