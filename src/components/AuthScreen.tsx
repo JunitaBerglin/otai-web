@@ -108,11 +108,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col p-6">
-      <Button
-        variant="ghost"
-        onClick={onBack}
-        className="self-start mb-6"
-      >
+      <Button variant="ghost" onClick={onBack} className="self-start mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Tillbaka
       </Button>
