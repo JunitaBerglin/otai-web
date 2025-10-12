@@ -11,21 +11,30 @@ import {
   Users,
   Plus,
   MessageSquare,
+  FileText,
 } from "lucide-react";
 import { OTAILogo } from "./WelcomeScreen";
 import { SystemStatus } from "./SystemStatus";
 import { ConversationHistory } from "./ConversationHistory";
-import type { user, message } from "../types/types";
+import { ReferralForm } from "./ReferralForm";
+import type {
+  user,
+  message,
+  ReferralForm as ReferralFormType,
+} from "../types/types";
 import {
   getActiveSession,
   saveActiveSession,
   clearActiveSession,
   archiveSession,
+  saveReferral,
+  updateReferralStatus,
 } from "../services/localStorage";
 import {
   sendMessageToGemini,
   isGeminiConfigured,
 } from "../services/geminiService";
+import { sendReferral } from "../services/emailService";
 
 interface ChatScreenProps {
   user: user | null;
@@ -44,6 +53,8 @@ export function ChatScreen({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  const [escalationSuggested, setEscalationSuggested] = useState(false);
 
   // Load active session on component mount
   useEffect(() => {
@@ -193,6 +204,11 @@ export function ChatScreen({
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
 
+      // Check if AI suggested escalation
+      if (aiResponse.includes("[ESKALERING_FÖRESLAGEN]")) {
+        setEscalationSuggested(true);
+      }
+
       // Save to active session
       saveActiveSession(user.id, finalMessages);
     } catch (error) {
@@ -222,6 +238,73 @@ export function ChatScreen({
 
   const handleSignOut = () => {
     onSignOut();
+  };
+
+  const handleReferralSubmit = async (referral: ReferralFormType) => {
+    if (!user) return;
+
+    try {
+      // Save as draft first
+      referral.status = "submitted";
+      saveReferral(referral);
+
+      // Send email
+      const result = await sendReferral(referral);
+
+      if (result.success) {
+        // Update status to sent
+        updateReferralStatus(referral.id, "sent");
+
+        // Add confirmation message to chat
+        const confirmationMsg: message = {
+          id: crypto.randomUUID(),
+          content:
+            "✅ Din remiss har skickats till vårt team av legitimerade arbetsterapeuter. De kommer att kontakta dig inom kort.",
+          role: {
+            id: "system",
+            email: "system@otai.se",
+            name: "System",
+            userType: "provider",
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        const updatedMessages = [...messages, confirmationMsg];
+        setMessages(updatedMessages);
+        saveActiveSession(user.id, updatedMessages);
+
+        // Close form and reset escalation flag
+        setShowReferralForm(false);
+        setEscalationSuggested(false);
+      } else {
+        // Update status to failed
+        updateReferralStatus(referral.id, "failed");
+
+        // Show error message
+        const errorMsg: message = {
+          id: crypto.randomUUID(),
+          content: `❌ ${
+            result.error ||
+            "Kunde inte skicka remissen. Den har sparats som utkast."
+          }`,
+          role: {
+            id: "system",
+            email: "system@otai.se",
+            name: "System",
+            userType: "provider",
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        const updatedMessages = [...messages, errorMsg];
+        setMessages(updatedMessages);
+        saveActiveSession(user.id, updatedMessages);
+
+        setShowReferralForm(false);
+      }
+    } catch (error) {
+      console.error("Error handling referral:", error);
+    }
   };
 
   const formatTime = (timestamp: string) => {
@@ -287,6 +370,18 @@ export function ChatScreen({
                 <MessageSquare className="flex-shrink-0" />
                 <span className="hidden sm:inline ml-2 text-sm">Historik</span>
               </Button>
+              {escalationSuggested && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowReferralForm(true)}
+                  className="text-white bg-white/20 hover:bg-white/30 px-2 sm:px-3 font-semibold"
+                  title="Skapa remiss till legitimerad arbetsterapeut"
+                >
+                  <FileText className="flex-shrink-0" />
+                  <span className="hidden sm:inline ml-2 text-sm">Remiss</span>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -463,6 +558,16 @@ export function ChatScreen({
           </div>
         </div>
       </div>
+
+      {/* Referral Form Modal */}
+      {showReferralForm && user && (
+        <ReferralForm
+          user={user}
+          conversationMessages={messages}
+          onSubmit={handleReferralSubmit}
+          onCancel={() => setShowReferralForm(false)}
+        />
+      )}
     </div>
   );
 }

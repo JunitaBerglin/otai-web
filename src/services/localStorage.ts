@@ -1,4 +1,4 @@
-import type { user, message } from "../types/types";
+import type { user, message, ReferralForm } from "../types/types";
 
 // Keys for localStorage
 const KEYS = {
@@ -7,6 +7,7 @@ const KEYS = {
   MESSAGES: "otai_messages",
   SESSIONS: "otai_sessions",
   ACTIVE_SESSION: "otai_active_session",
+  REFERRALS: "otai_referrals",
 };
 
 // User Management
@@ -238,4 +239,55 @@ export const clearAllData = (): void => {
   localStorage.removeItem(KEYS.CURRENT_USER);
   localStorage.removeItem(KEYS.USERS);
   localStorage.removeItem(KEYS.MESSAGES);
+  localStorage.removeItem(KEYS.REFERRALS);
+};
+
+// Referral Management
+export const saveReferral = (referral: ReferralForm): void => {
+  const referrals = getReferrals();
+  const existingIndex = referrals.findIndex((r) => r.id === referral.id);
+
+  if (existingIndex >= 0) {
+    referrals[existingIndex] = referral;
+  } else {
+    referrals.push(referral);
+  }
+
+  localStorage.setItem(KEYS.REFERRALS, JSON.stringify(referrals));
+};
+
+export const getReferrals = (userId?: string): ReferralForm[] => {
+  const referralsStr = localStorage.getItem(KEYS.REFERRALS);
+  if (!referralsStr) return [];
+
+  try {
+    const allReferrals = JSON.parse(referralsStr) as ReferralForm[];
+    return userId
+      ? allReferrals.filter((r) => r.userId === userId)
+      : allReferrals;
+  } catch {
+    return [];
+  }
+};
+
+export const getReferralById = (id: string): ReferralForm | null => {
+  const referrals = getReferrals();
+  return referrals.find((r) => r.id === id) || null;
+};
+
+export const deleteReferral = (id: string): void => {
+  const referrals = getReferrals();
+  const filtered = referrals.filter((r) => r.id !== id);
+  localStorage.setItem(KEYS.REFERRALS, JSON.stringify(filtered));
+};
+
+export const updateReferralStatus = (
+  id: string,
+  status: ReferralForm["status"]
+): void => {
+  const referral = getReferralById(id);
+  if (referral) {
+    referral.status = status;
+    saveReferral(referral);
+  }
 };

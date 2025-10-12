@@ -67,7 +67,13 @@ export function SystemStatus({ className = "" }: SystemStatusProps) {
       <Alert className="border-green-200 bg-green-50">
         <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-800">
-          Alla system fungerar normalt
+          <div className="space-y-1">
+            <div>Alla system fungerar normalt</div>
+            <div className="text-xs text-green-700">
+              ✓ AI-bedömning aktiv · ✓ Remisser till legitimerade
+              arbetsterapeuter tillgängliga
+            </div>
+          </div>
         </AlertDescription>
       </Alert>
     </div>

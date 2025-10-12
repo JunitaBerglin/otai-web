@@ -62,6 +62,17 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
             Berätta gärna om dina utmaningar i vardagen, så hjälper jag dig med
             arbetsterapeutiska förslag och strategier.
           </p>
+
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 sm:p-4">
+            <p className="text-primary text-xs sm:text-sm leading-relaxed">
+              <strong>💡 Första bedömning:</strong> Jag fungerar som en första
+              bedömning och kan ge dig råd och förslag. Om du behöver mer
+              omfattande hjälp, fysiska hjälpmedel eller personlig uppföljning,
+              kan jag hjälpa dig skapa en remiss till vårt team av{" "}
+              <strong>legitimerade arbetsterapeuter</strong> som tar över ditt
+              ärende.
+            </p>
+          </div>
         </div>
 
         <div className="bg-secondary p-4 sm:p-6 rounded-2xl space-y-3">
