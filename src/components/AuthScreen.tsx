@@ -107,33 +107,44 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col p-6">
-      <Button variant="ghost" onClick={onBack} className="self-start mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="min-h-screen bg-white flex flex-col p-4 sm:p-6 overflow-x-hidden">
+      <Button
+        variant="ghost"
+        onClick={onBack}
+        className="self-start mb-4 sm:mb-6"
+      >
+        <ArrowLeft className="mr-2 flex-shrink-0" />
         Tillbaka
       </Button>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-md space-y-6">
+      <div className="flex-1 flex items-center justify-center px-2">
+        <div
+          className="space-y-4 sm:space-y-6 container"
+          style={{ maxWidth: "28rem" }}
+        >
           <div className="text-center flex justify-center">
-            <OTAILogo className="scale-75" />
+            <OTAILogo className="scale-[0.6] sm:scale-75" />
           </div>
 
           <Card className="border-0 shadow-xl">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-primary text-2xl font-bold">
+            <CardHeader className="text-center pb-3 sm:pb-4 px-4 sm:px-6">
+              <CardTitle className="text-primary text-xl sm:text-2xl font-bold">
                 Välkommen till OTAI
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Logga in eller skapa ett konto för att komma igång
               </CardDescription>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Logga in</TabsTrigger>
-                  <TabsTrigger value="signup">Skapa konto</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+                  <TabsTrigger value="signin" className="text-sm">
+                    Logga in
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="text-sm">
+                    Skapa konto
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="signin" className="space-y-4">
@@ -170,7 +181,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
                     <Button
                       type="submit"
                       variant="default"
-                      className="w-full rounded-full py-6"
+                      className="w-full rounded-full py-5 sm:py-6 text-sm sm:text-base"
                       disabled={isLoading}
                     >
                       {isLoading ? "Loggar in..." : "Logga in"}
@@ -248,7 +259,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
                     <Button
                       type="submit"
                       variant="default"
-                      className="w-full rounded-full py-6"
+                      className="w-full rounded-full py-5 sm:py-6 text-sm sm:text-base"
                       disabled={isLoading}
                     >
                       {isLoading ? "Skapar konto..." : "Skapa konto"}

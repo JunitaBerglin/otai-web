@@ -3,11 +3,25 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
-import { Send, User, Bot, LogOut, Users } from "lucide-react";
+import {
+  Send,
+  User,
+  Bot,
+  LogOut,
+  Users,
+  Plus,
+  MessageSquare,
+} from "lucide-react";
 import { OTAILogo } from "./WelcomeScreen";
 import { SystemStatus } from "./SystemStatus";
+import { ConversationHistory } from "./ConversationHistory";
 import type { user, message } from "../types/types";
-import { getMessages, saveMessage } from "../services/localStorage";
+import {
+  getActiveSession,
+  saveActiveSession,
+  clearActiveSession,
+  archiveSession,
+} from "../services/localStorage";
 import {
   sendMessageToGemini,
   isGeminiConfigured,
@@ -29,12 +43,29 @@ export function ChatScreen({
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Load chat history on component mount
+  // Load active session on component mount
   useEffect(() => {
-    loadChatHistory();
+    loadActiveSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Check session age every minute and archive if > 3 hours
+  useEffect(() => {
+    if (!user) return;
+
+    const checkSessionAge = () => {
+      const session = getActiveSession(user.id);
+      if (!session && messages.length > 0) {
+        // Session was archived, clear messages
+        setMessages([]);
+      }
+    };
+
+    const interval = setInterval(checkSessionAge, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [user, messages.length]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -46,20 +77,58 @@ export function ChatScreen({
     }
   }, [messages]);
 
-  const loadChatHistory = async () => {
+  const loadActiveSession = async () => {
     if (!user) {
       setIsLoadingHistory(false);
       return;
     }
 
     try {
-      const history = getMessages(user.id);
-      setMessages(history);
+      const session = getActiveSession(user.id);
+      if (session) {
+        setMessages(session.messages);
+      } else {
+        setMessages([]);
+      }
     } catch (error) {
-      console.error("Error loading chat history:", error);
+      console.error("Error loading active session:", error);
     } finally {
       setIsLoadingHistory(false);
     }
+  };
+
+  const handleLoadArchivedSession = (archivedMessages: message[]) => {
+    // Archive current session if it has messages
+    if (user && messages.length > 0) {
+      const currentSession = getActiveSession(user.id);
+      if (currentSession) {
+        archiveSession(user.id, currentSession);
+      }
+    }
+
+    // Load archived session
+    setMessages(archivedMessages);
+
+    // Save as new active session
+    if (user) {
+      saveActiveSession(user.id, archivedMessages);
+    }
+  };
+
+  const handleNewConversation = () => {
+    if (!user) return;
+
+    // Archive current session if it has messages
+    if (messages.length > 0) {
+      const currentSession = getActiveSession(user.id);
+      if (currentSession) {
+        archiveSession(user.id, currentSession);
+      }
+      clearActiveSession(user.id);
+    }
+
+    // Clear messages for new conversation
+    setMessages([]);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -96,10 +165,11 @@ export function ChatScreen({
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, tempUserMessage]);
+    const updatedMessages = [...messages, tempUserMessage];
+    setMessages(updatedMessages);
 
-    // Save user message
-    saveMessage(user.id, tempUserMessage);
+    // Save to active session
+    saveActiveSession(user.id, updatedMessages);
 
     setIsLoading(true);
 
@@ -120,10 +190,11 @@ export function ChatScreen({
         timestamp: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      const finalMessages = [...updatedMessages, aiMessage];
+      setMessages(finalMessages);
 
-      // Save AI message
-      saveMessage(user.id, aiMessage);
+      // Save to active session
+      saveActiveSession(user.id, finalMessages);
     } catch (error) {
       console.error("Error sending message:", error);
 
@@ -172,183 +243,224 @@ export function ChatScreen({
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="bg-primary shadow-md p-4">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-semibold text-white text-lg">OTAI</h1>
-              <p className="text-sm text-white/80">
-                Arbetsterapeutisk AI-assistent
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-white flex overflow-x-hidden">
+      {/* Conversation History - desktop sidebar, mobile sheet */}
+      {user && (
+        <ConversationHistory
+          userId={user.id}
+          onLoadSession={handleLoadArchivedSession}
+          isOpen={historyOpen}
+          setIsOpen={setHistoryOpen}
+        />
+      )}
 
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-white/80 hidden sm:block">
-              {user?.name || user?.email}
-            </span>
-            {user?.userType === "provider" && onShowProviderDashboard && (
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="bg-primary shadow-md p-3 sm:p-4">
+          <div className="flex items-center justify-between mx-auto gap-2 container">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+              <div className="bg-white rounded-full flex items-center justify-center flex-shrink-0 p-2">
+                <Bot className="text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-semibold text-white text-base sm:text-lg truncate">
+                  OTAI
+                </h1>
+                <p className="text-xs sm:text-sm text-white/80 hidden sm:block truncate">
+                  Arbetsterapeutisk AI-assistent
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              <span className="text-xs sm:text-sm text-white/80 hidden md:block truncate">
+                {user?.name || user?.email}
+              </span>
+              {/* History button - only visible on mobile/tablet (< 1024px) */}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onShowProviderDashboard}
-                className="text-white hover:bg-white/20"
+                onClick={() => setHistoryOpen(true)}
+                className="text-white hover:bg-white/20 px-2 sm:px-3 lg:hidden"
               >
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline ml-2">Dashboard</span>
+                <MessageSquare className="flex-shrink-0" />
+                <span className="hidden sm:inline ml-2 text-sm">Historik</span>
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-white hover:bg-white/20"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline ml-2">Logga ut</span>
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleNewConversation}
+                className="text-white hover:bg-white/20 px-2 sm:px-3"
+                title="Starta ny konversation"
+              >
+                <Plus className="flex-shrink-0" />
+                <span className="hidden sm:inline ml-2 text-sm">Ny</span>
+              </Button>
+              {user?.userType === "provider" && onShowProviderDashboard && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onShowProviderDashboard}
+                  className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-auto px-2 sm:px-3"
+                >
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline ml-2 text-sm">
+                    Dashboard
+                  </span>
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-auto px-2 sm:px-3"
+              >
+                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline ml-2 text-sm">Logga ut</span>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* System Status */}
-      <SystemStatus className="max-w-4xl mx-auto px-4 pt-4" />
+        {/* System Status */}
+        <SystemStatus className="mx-auto px-3 sm:px-4 pt-3 sm:pt-4 container" />
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center py-12 space-y-4">
-                <OTAILogo className="mx-auto scale-50" />
-                <div>
-                  <h2 className="text-xl text-[#1C3D32] mb-2">
-                    Hej! Jag är OTAI
-                  </h2>
-                  <p className="text-slate-600 max-w-md mx-auto">
-                    Berätta gärna om dina utmaningar i vardagen, så hjälper jag
-                    dig med arbetsterapeutiska förslag och strategier.
-                  </p>
-                </div>
-                <div className="bg-[#F9E6EC] p-4 rounded-lg max-w-md mx-auto">
-                  <p className="text-sm text-[#1C3D32]">
-                    <strong>Exempel på vad du kan fråga:</strong>
-                    <br />
-                    "Jag har svårt att komma ihåg att ta mina mediciner"
-                    <br />
-                    "Jag får ont i ryggen när jag städar"
-                    <br />
-                    "Mitt barn har svårt att koncentrera sig på läxorna"
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {messages.map((message) => {
-              const isAssistant =
-                message.role === "assistant" ||
-                (typeof message.role === "object" &&
-                  message.role.id === "otai");
-              const isUser = !isAssistant;
-
-              return (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    isUser ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {!isUser && (
-                    <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
-                      <AvatarFallback className="bg-primary text-white text-xs">
-                        <Bot className="w-4 h-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-
-                  <div
-                    className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
-                      isUser ? "text-white rounded-br-sm" : "rounded-bl-sm"
-                    }`}
-                    style={{
-                      backgroundColor: isUser ? "#213E35" : "#F8E6EC",
-                      color: isUser ? "white" : "#213E35",
-                    }}
-                  >
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col mx-auto container min-w-0">
+          <ScrollArea className="flex-1 p-3 sm:p-4">
+            <div className="space-y-3 sm:space-y-4">
+              {messages.length === 0 && (
+                <div className="text-center py-8 sm:py-12 space-y-3 sm:space-y-4 px-2">
+                  <OTAILogo className="mx-auto scale-[0.4] sm:scale-50" />
+                  <div>
+                    <h2 className="text-lg sm:text-xl text-[#1C3D32] mb-2">
+                      Hej! Jag är OTAI
+                    </h2>
                     <p
-                      className={`text-xs mt-1.5 ${
-                        isUser ? "text-white/70" : "text-primary/60"
-                      }`}
+                      className="text-sm sm:text-base text-slate-600 mx-auto px-2"
+                      style={{ maxWidth: "28rem" }}
                     >
-                      {formatTime(message.timestamp)}
+                      Berätta gärna om dina utmaningar i vardagen, så hjälper
+                      jag dig med arbetsterapeutiska förslag och strategier.
                     </p>
                   </div>
-
-                  {isUser && (
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarFallback className="bg-primary text-white text-xs">
-                        <User className="w-4 h-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              );
-            })}
-
-            {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
-                  <AvatarFallback className="bg-primary text-white text-xs">
-                    <Bot className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="bg-secondary rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce"></div>
+                  <div className="bg-[#F9E6EC] p-3 sm:p-4 rounded-lg max-w-md mx-auto">
+                    <p className="text-xs sm:text-sm text-[#1C3D32]">
+                      <strong>Exempel på vad du kan fråga:</strong>
+                      <br />
+                      "Jag har svårt att komma ihåg att ta mina mediciner"
+                      <br />
+                      "Jag får ont i ryggen när jag städar"
+                      <br />
+                      "Mitt barn har svårt att koncentrera sig på läxorna"
+                    </p>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+              )}
 
-        {/* Input Area */}
-        <div className="border-t border-slate-200 bg-white p-4 shadow-lg">
-          <form
-            onSubmit={handleSendMessage}
-            className="flex gap-3 max-w-3xl mx-auto"
-          >
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Skriv ditt meddelande här..."
-              disabled={isLoading}
-              className="flex-1 rounded-full border-slate-300 bg-slate-50 focus:border-primary focus:ring-primary px-5 py-6"
-            />
-            <Button
-              type="submit"
-              variant="default"
-              disabled={isLoading || !inputMessage.trim()}
-              className="rounded-full h-12 w-12 p-0 flex items-center justify-center"
+              {messages.map((message) => {
+                const isAssistant =
+                  message.role === "assistant" ||
+                  (typeof message.role === "object" &&
+                    message.role.id === "otai");
+                const isUser = !isAssistant;
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${
+                      isUser ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {!isUser && (
+                      <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
+                        <AvatarFallback className="bg-primary text-white text-xs">
+                          <Bot className="w-4 h-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+
+                    <div
+                      className={`px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-sm ${
+                        isUser ? "text-white rounded-br-sm" : "rounded-bl-sm"
+                      }`}
+                      style={{
+                        backgroundColor: isUser ? "#213E35" : "#F8E6EC",
+                        color: isUser ? "white" : "#213E35",
+                        maxWidth: isUser ? "85%" : "75%",
+                      }}
+                    >
+                      <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                        {message.content}
+                      </p>
+                      <p
+                        className={`text-[10px] sm:text-xs mt-1 sm:mt-1.5 ${
+                          isUser ? "text-white/70" : "text-primary/60"
+                        }`}
+                      >
+                        {formatTime(message.timestamp)}
+                      </p>
+                    </div>
+
+                    {isUser && (
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        <AvatarFallback className="bg-primary text-white text-xs">
+                          <User className="w-4 h-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                );
+              })}
+
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-white text-xs">
+                      <Bot className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-secondary rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Input Area */}
+          <div className="border-t border-slate-200 bg-white p-3 sm:p-4 shadow-lg">
+            <form
+              onSubmit={handleSendMessage}
+              className="flex gap-2 sm:gap-3 mx-auto container"
             >
-              <Send className="w-5 h-5" />
-            </Button>
-          </form>
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Skriv ditt meddelande här..."
+                disabled={isLoading}
+                className="flex-1 min-w-0 rounded-full border-slate-300 bg-slate-50 focus:border-primary focus:ring-primary px-4 sm:px-5 py-5 sm:py-6 text-sm sm:text-base"
+              />
+              <Button
+                type="submit"
+                variant="default"
+                disabled={isLoading || !inputMessage.trim()}
+                className="rounded-full p-3 sm:p-4 flex items-center justify-center flex-shrink-0"
+              >
+                <Send className="flex-shrink-0" />
+              </Button>
+            </form>
 
-          <p className="text-xs text-slate-500 text-center mt-3">
-            OTAI ger förslag baserat på arbetsterapeutisk kunskap. Alla
-            bedömningar granskas av legitimerad personal.
-          </p>
+            <p className="text-[10px] sm:text-xs text-slate-500 text-center mt-2 sm:mt-3 px-2">
+              OTAI ger förslag baserat på arbetsterapeutisk kunskap. Alla
+              bedömningar granskas av legitimerad personal.
+            </p>
+          </div>
         </div>
       </div>
     </div>
