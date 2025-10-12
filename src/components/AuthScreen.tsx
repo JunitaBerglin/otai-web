@@ -28,7 +28,7 @@ interface AuthScreenProps {
 export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [userType, setUserType] = useState("patient");
+  const [userType, setUserType] = useState<"patient" | "provider">("patient");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,7 +52,7 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
         id: crypto.randomUUID(),
         email,
         name,
-        userType: userType as "patient" | "provider",
+        userType: userType,
       };
 
       saveUser(newUser);
@@ -218,17 +218,23 @@ export function AuthScreen({ onBack, onAuthSuccess }: AuthScreenProps) {
 
                     <div className="space-y-3">
                       <Label>Jag är en:</Label>
-                      <RadioGroup value={userType} onValueChange={setUserType}>
+                      <RadioGroup
+                        value={userType}
+                        onValueChange={(value) =>
+                          setUserType(value as "patient" | "provider")
+                        }
+                      >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="patient" id="patient" />
-                          <Label htmlFor="patient">Patient/Brukare</Label>
+                          <Label htmlFor="patient" className="cursor-pointer">
+                            Patient/Brukare
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="healthcare_provider"
-                            id="provider"
-                          />
-                          <Label htmlFor="provider">Vårdgivare</Label>
+                          <RadioGroupItem value="provider" id="provider" />
+                          <Label htmlFor="provider" className="cursor-pointer">
+                            Vårdgivare
+                          </Label>
                         </div>
                       </RadioGroup>
                     </div>
