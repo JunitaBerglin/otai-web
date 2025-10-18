@@ -188,10 +188,18 @@ export function ChatScreen({
       // Get AI response from Gemini
       const aiResponse = await sendMessageToGemini(userMessage, messages);
 
+      // Check if AI suggested escalation (before removing the marker)
+      const shouldEscalate = aiResponse.includes("[ESKALERING_FÖRESLAGEN]");
+
+      // Remove the escalation marker from the displayed message
+      const cleanedResponse = aiResponse
+        .replace("[ESKALERING_FÖRESLAGEN]", "")
+        .trim();
+
       // Create AI message
       const aiMessage: message = {
         id: crypto.randomUUID(),
-        content: aiResponse,
+        content: cleanedResponse,
         role: {
           id: "otai",
           email: "ai@otai.se",
@@ -204,8 +212,8 @@ export function ChatScreen({
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
 
-      // Check if AI suggested escalation
-      if (aiResponse.includes("[ESKALERING_FÖRESLAGEN]")) {
+      // Set escalation flag if marker was found
+      if (shouldEscalate) {
         setEscalationSuggested(true);
       }
 
