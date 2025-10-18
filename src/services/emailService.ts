@@ -7,7 +7,7 @@ const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "";
 
 // Fallback email configuration
 const THERAPIST_EMAIL =
-  import.meta.env.VITE_THERAPIST_EMAIL || "arbetsterapeut@otai.se";
+  import.meta.env.VITE_THERAPIST_EMAIL || "otairemiss@gmail.com";
 
 interface EmailResult {
   success: boolean;
