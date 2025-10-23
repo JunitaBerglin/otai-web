@@ -12,11 +12,13 @@ import {
   Plus,
   MessageSquare,
   FileText,
+  Info,
 } from "lucide-react";
 import { OTAILogo } from "./WelcomeScreen";
 import { SystemStatus } from "./SystemStatus";
 import { ConversationHistory } from "./ConversationHistory";
 import { ReferralForm } from "./ReferralForm";
+import { InfoModal } from "./InfoModal";
 import type {
   user,
   message,
@@ -55,6 +57,7 @@ export function ChatScreen({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [escalationSuggested, setEscalationSuggested] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // Load active session on component mount
   useEffect(() => {
@@ -416,6 +419,16 @@ export function ChatScreen({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setShowInfoModal(true)}
+                className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-auto px-2 sm:px-3"
+                title="Information om OTAI"
+              >
+                <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline ml-2 text-sm">Info</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleSignOut}
                 className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-auto px-2 sm:px-3"
               >
@@ -576,6 +589,12 @@ export function ChatScreen({
           onCancel={() => setShowReferralForm(false)}
         />
       )}
+
+      {/* Info Modal */}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </div>
   );
 }
