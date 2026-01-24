@@ -61,11 +61,33 @@ export function ReferralForm({
 
   const totalSteps = 5;
 
-  const handleNext = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
+  const validateStep = (currentStep: number): string => {
+    if (currentStep === 1) {
+      const p = formData.patientInfo;
+      if (!p?.name?.trim()) return "Fyll i namn.";
+      if (!p?.email?.trim()) return "Fyll i e-post.";
+      if (!p?.phone?.trim()) return "Fyll i telefonnummer.";
     }
+  
+    if (currentStep === 2) {
+      const c = formData.challenges;
+      if (!c?.primary?.trim()) return "Beskriv din huvudsakliga utmaning.";
+      if (!c?.impact?.trim()) return "Beskriv hur detta påverkar din vardag.";
+    }
+  
+    return "";
   };
+  
+  const handleNext = () => {
+    const validationError = validateStep(step);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError("");
+    if (step < totalSteps) setStep(step + 1);
+  };
+  
 
   const handleBack = () => {
     if (step > 1) {
@@ -85,7 +107,6 @@ export function ReferralForm({
     setError("");
 
     try {
-      // Generate conversation summary
       const conversationSummary = {
         messageCount: conversationMessages.length,
         mainTopics: extractMainTopics(conversationMessages),
@@ -124,7 +145,6 @@ export function ReferralForm({
   };
 
   const extractMainTopics = (messages: message[]): string[] => {
-    // Simple extraction - you can make this more sophisticated
     const topics = new Set<string>();
     messages.forEach((msg) => {
       if (msg.content.includes("medicin")) topics.add("Medicinhantering");
@@ -144,7 +164,6 @@ export function ReferralForm({
   };
 
   const extractSuggestions = (messages: message[]): string[] => {
-    // Extract AI suggestions that were given
     return messages
       .filter((msg) => msg.role === "assistant")
       .flatMap((msg) => {
@@ -252,16 +271,17 @@ export function ReferralForm({
                   <Input
                     id="age"
                     type="number"
-                    value={formData.patientInfo?.age || ""}
-                    onChange={(e) =>
+                    value={formData.patientInfo?.age ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
                       setFormData({
                         ...formData,
                         patientInfo: {
                           ...formData.patientInfo!,
-                          age: parseInt(e.target.value),
+                          age: v ? parseInt(v, 10) : undefined,
                         },
-                      })
-                    }
+                      });
+                    }}
                   />
                 </div>
               </div>
