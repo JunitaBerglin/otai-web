@@ -197,38 +197,25 @@ export const sendMessageToGemini = async (
   }
 
   try {
-    console.log("🔑 API Key finns:", !!API_KEY);
-    console.log(
-      "📝 Skickar meddelande till Gemini:",
-      userMessage.substring(0, 50) + "..."
-    );
-
-    // Use Gemini 2.5 Flash - latest model with best price/performance
-    // Perfect for high-volume, low-latency tasks
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
     });
 
-    // Build conversation history
     const conversationHistory = chatHistory
-      .slice(-10)
-      .map((msg) => {
-        const role =
-          typeof msg.role === "object" && msg.role.email ? "user" : "model";
-        return `${role}: ${msg.content}`;
-      })
-      .join("\n");
+    .map((msg) => {
+      const sender = msg.role === "assistant" ? "OTAI" : msg.role.name;
+      return `${sender}: ${msg.content}`;
+    })
+    .join("\n\n");
+  
 
-    // Räkna antal meddelanden från användaren för att bestämma konversationsfas
     const userMessageCount =
       chatHistory.filter(
         (msg) => typeof msg.role === "object" && msg.role.email
-      ).length + 1; // +1 för det nya meddelandet
+      ).length + 1;
 
-    // Få dynamisk system prompt baserat på konversationsfas
     const systemPrompt = getSystemPrompt(userMessageCount);
 
-    // Combine system prompt with conversation history and new message
     const fullPrompt = `${systemPrompt}
 
 TIDIGARE KONVERSATION (${userMessageCount} användarmeddelanden hittills):
@@ -239,17 +226,9 @@ ${userMessage}
 
 Svara nu som OTAI, den arbetsterapeutiska AI-assistenten:`;
 
-    console.log("🚀 Anropar Gemini API...");
-
-    // Generate response
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
-
-    console.log(
-      "✅ Svar mottaget från Gemini:",
-      text.substring(0, 100) + "..."
-    );
 
     return text;
   } catch (error) {
@@ -286,7 +265,6 @@ Svara nu som OTAI, den arbetsterapeutiska AI-assistenten:`;
   }
 };
 
-// Helper function to check if API is configured
 export const isGeminiConfigured = (): boolean => {
   return !!API_KEY;
 };
