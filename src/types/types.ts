@@ -15,6 +15,17 @@ export type message = {
   attachments?: string[];
 };
 
+export type ReferralDraftICF = {
+  problemStatement: string;
+  icf: {
+    bodyFunctions: { code: string; label: string; qualifier: number }[];
+    activitiesParticipation: { code: string; label: string; qualifier: number }[];
+    environmentalFactors: { code: string; label: string; impact: number }[];
+  };
+  suggestedInterventions: string[];
+  missingInfoQuestions: string[];
+};
+
 export type chatSession = {
   id: string;
   userId: string;
