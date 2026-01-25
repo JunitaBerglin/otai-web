@@ -18,7 +18,9 @@ import type {
   ReferralUrgency,
   user,
   message,
+  ReferralDraftICF,
 } from "../types/types";
+import { generateReferralDraftICF } from "../services/geminiService";
 
 interface ReferralFormProps {
   user: user;
@@ -68,16 +70,16 @@ export function ReferralForm({
       if (!p?.email?.trim()) return "Fyll i e-post.";
       if (!p?.phone?.trim()) return "Fyll i telefonnummer.";
     }
-  
+
     if (currentStep === 2) {
       const c = formData.challenges;
       if (!c?.primary?.trim()) return "Beskriv din huvudsakliga utmaning.";
       if (!c?.impact?.trim()) return "Beskriv hur detta påverkar din vardag.";
     }
-  
+
     return "";
   };
-  
+
   const handleNext = () => {
     const validationError = validateStep(step);
     if (validationError) {
@@ -87,7 +89,6 @@ export function ReferralForm({
     setError("");
     if (step < totalSteps) setStep(step + 1);
   };
-  
 
   const handleBack = () => {
     if (step > 1) {
@@ -119,6 +120,14 @@ export function ReferralForm({
           .join("\n\n"),
       };
 
+      let icfDraft: ReferralDraftICF | undefined = undefined;
+
+      try {
+        icfDraft = await generateReferralDraftICF(conversationMessages);
+      } catch (e) {
+        console.warn("Kunde inte generera ICF-draft, skickar remiss utan:", e);
+      }
+
       const referral: ReferralFormType = {
         id: crypto.randomUUID(),
         userId: user.id,
@@ -133,6 +142,7 @@ export function ReferralForm({
         additionalNotes: formData.additionalNotes,
         consentGiven: formData.consentGiven!,
         consentTimestamp: new Date().toISOString(),
+        icfDraft,
       };
 
       await onSubmit(referral);

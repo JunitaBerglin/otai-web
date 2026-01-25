@@ -1,4 +1,4 @@
-import type { ReferralForm } from "../types/types";
+import type { ReferralDraftICF, ReferralForm } from "../types/types";
 
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || "";
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "";
@@ -32,13 +32,41 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       referral.urgency
     )})`;
 
+    function formatIcfDraft(d: ReferralDraftICF): string {
+      const lines: string[] = [];
+      lines.push(`ICF-OPTIMERAD HANDOVER (AUTOGENERERAD)`);
+      lines.push(`Problem: ${d.problemStatement}`);
+      lines.push("");
+    
+      lines.push("b – Kroppsfunktioner:");
+      d.icf.bodyFunctions.forEach(x => lines.push(`- ${x.code} ${x.label} (q${x.qualifier})`));
+      lines.push("");
+    
+      lines.push("d – Aktiviteter/Delaktighet:");
+      d.icf.activitiesParticipation.forEach(x => lines.push(`- ${x.code} ${x.label} (q${x.qualifier})`));
+      lines.push("");
+    
+      lines.push("e – Omgivningsfaktorer:");
+      d.icf.environmentalFactors.forEach(x => lines.push(`- ${x.code} ${x.label} (impact ${x.impact})`));
+      lines.push("");
+    
+      lines.push("Föreslagna arbetsterapeutiska insatser:");
+      d.suggestedInterventions.forEach(s => lines.push(`- ${s}`));
+      lines.push("");
+    
+      if (d.missingInfoQuestions?.length) {
+        lines.push("Kompletterande frågor (vid behov):");
+        d.missingInfoQuestions.forEach(q => lines.push(`- ${q}`));
+        lines.push("");
+      }
+    
+      return lines.join("\n");
+    }    
+
     const emailParams = {
-      // Primary recipient for referral template
       to_email: THERAPIST_EMAIL,
       subject,
 
-      // Compatibility (if Auto-Reply template still expects these)
-      email: referral.patientInfo.email,
       name: referral.patientInfo.name,
       title: subject,
 
@@ -47,7 +75,8 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       patient_phone: referral.patientInfo.phone,
       patient_age: referral.patientInfo.age || "Ej angivet",
       patient_address: referral.patientInfo.address || "Ej angivet",
-
+      icf_block: referral.icfDraft ? formatIcfDraft(referral.icfDraft) : "ICF-analys saknas (kunde ej genereras).",
+      
       primary_challenge: referral.challenges.primary,
       challenge_duration: referral.challenges.duration || "Ej angivet",
       challenge_impact: referral.challenges.impact,

@@ -51,6 +51,7 @@ export type ReferralForm = {
   id: string;
   userId: string;
   createdAt: string;
+  icfDraft?: ReferralDraftICF;
   status: "draft" | "submitted" | "sent" | "failed";
 
   // Patient information

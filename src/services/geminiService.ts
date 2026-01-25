@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { message } from "../types/types";
+import type { message, ReferralDraftICF } from "../types/types";
 
 // Initialize Gemini AI
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -257,6 +257,153 @@ export const sendMessageToGemini = async (
 
     throw new Error(`Kunde inte få svar från AI-assistenten: ${errorMessage}`);
   }
+};
+
+const safeJsonParse = <T>(raw: string): T => {
+  // Ta bort ev. ```json ... ``` wrappers
+  const cleaned = raw
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    // Försök hitta första { ... } blocket om modellen skrev text före/efter
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      return JSON.parse(cleaned.slice(start, end + 1)) as T;
+    }
+    throw new Error("Kunde inte tolka AI-svaret som JSON.");
+  }
+};
+
+export const generateReferralDraftICF = async (
+  chatHistory: message[]
+): Promise<ReferralDraftICF> => {
+  if (!genAI) {
+    throw new Error(
+      "Gemini API är inte konfigurerad. Lägg till VITE_GEMINI_API_KEY i .env-filen."
+    );
+  }
+
+  const MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3-flash-preview";
+  const model = genAI.getGenerativeModel({ model: MODEL });
+
+  const conversation = chatHistory
+    .slice(-15)
+    .map((msg) => {
+      const sender = msg.role === "assistant" ? "OTAI" : "ANVÄNDARE";
+      return `${sender}: ${msg.content}`;
+    })
+    .join("\n\n");
+
+  const icfShortlist = {
+    bodyFunctions: [
+      { code: "b130", label: "Energy and drive functions" },
+      { code: "b140", label: "Attention functions" },
+      { code: "b144", label: "Memory functions" },
+      { code: "b152", label: "Emotional functions" },
+      { code: "b710", label: "Mobility of joint functions" },
+      { code: "b730", label: "Muscle power functions" },
+    ],
+    activitiesParticipation: [
+      { code: "d230", label: "Carrying out daily routine" },
+      {
+        code: "d240",
+        label: "Handling stress and other psychological demands",
+      },
+      { code: "d410", label: "Changing basic body position" },
+      { code: "d450", label: "Walking" },
+      { code: "d510", label: "Washing oneself" },
+      { code: "d540", label: "Dressing" },
+      { code: "d550", label: "Eating" },
+      { code: "d570", label: "Looking after one's health" },
+      { code: "d620", label: "Acquisition of goods and services" },
+      { code: "d630", label: "Preparing meals" },
+      { code: "d640", label: "Doing housework" },
+      { code: "d850", label: "Remunerative employment" },
+      { code: "d920", label: "Recreation and leisure" },
+    ],
+    environmentalFactors: [
+      {
+        code: "e110",
+        label: "Products or substances for personal consumption",
+      },
+      {
+        code: "e115",
+        label: "Products and technology for personal use in daily living",
+      },
+      {
+        code: "e120",
+        label:
+          "Products and technology for personal indoor and outdoor mobility",
+      },
+      {
+        code: "e150",
+        label: "Design, construction of buildings for public use",
+      },
+      {
+        code: "e155",
+        label: "Design, construction of buildings for private use",
+      },
+      { code: "e310", label: "Immediate family" },
+      { code: "e355", label: "Health professionals" },
+      { code: "e580", label: "Health services, systems and policies" },
+    ],
+  };
+
+  const prompt = `
+Du är en legitimeringsnära arbetsterapeutisk AI som ska skapa en FÖRIFYLLD REMISS enligt ICF, baserad på en chatt.
+
+UPPGIFT:
+1) Sammanfatta problemet (problemStatement) i 1-2 meningar.
+2) Välj relevanta ICF-koder ENDAST från listan nedan (ingen annan kod får förekomma).
+3) För varje vald kod:
+   - ange label (som i listan)
+   - ange qualifier (0-4) för b/d där 0=ingen svårighet, 4=total svårighet
+   - ange impact (-4..+4) för e där -4=stark barriär, +4=stark underlättare
+4) Föreslå 3-6 arbetsterapeutiska insatser (suggestedInterventions) i punktform.
+5) Om något viktigt saknas, ställ MAX 3 kompletterande frågor i missingInfoQuestions. Om inget saknas: [].
+
+FORMATKRAV:
+- Du MÅSTE svara med ENDAST giltig JSON.
+- Inga markdown-backticks.
+- Följ exakt detta schema:
+
+{
+  "problemStatement": "string",
+  "icf": {
+    "bodyFunctions": [{"code":"b130","label":"...","qualifier":0}],
+    "activitiesParticipation": [{"code":"d230","label":"...","qualifier":0}],
+    "environmentalFactors": [{"code":"e115","label":"...","impact":0}]
+  },
+  "suggestedInterventions": ["..."],
+  "missingInfoQuestions": ["..."]
+}
+
+ICF-LISTA (endast dessa är tillåtna):
+BODY FUNCTIONS: ${JSON.stringify(icfShortlist.bodyFunctions)}
+ACTIVITIES/PARTICIPATION: ${JSON.stringify(
+    icfShortlist.activitiesParticipation
+  )}
+ENVIRONMENTAL FACTORS: ${JSON.stringify(icfShortlist.environmentalFactors)}
+
+CHATTHISTORIK:
+${conversation}
+`.trim();
+
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  const draft = safeJsonParse<ReferralDraftICF>(text);
+
+  if (!draft.problemStatement || !draft.icf) {
+    throw new Error("AI-remissen saknar obligatoriska fält.");
+  }
+
+  return draft;
 };
 
 export const isGeminiConfigured = (): boolean => {
