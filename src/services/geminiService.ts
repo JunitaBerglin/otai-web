@@ -197,40 +197,35 @@ export const sendMessageToGemini = async (
   }
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-    });
+    const MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3-flash-preview";
+    const model = genAI.getGenerativeModel({ model: MODEL });
 
     const conversationHistory = chatHistory
-    .map((msg) => {
-      const sender = msg.role === "assistant" ? "OTAI" : msg.role.name;
-      return `${sender}: ${msg.content}`;
-    })
-    .join("\n\n");
-  
+      .slice(-10)
+      .map((msg) => {
+        const sender = msg.role === "assistant" ? "OTAI" : "ANVÄNDARE";
+        return `${sender}: ${msg.content}`;
+      })
+      .join("\n\n");
 
     const userMessageCount =
-      chatHistory.filter(
-        (msg) => typeof msg.role === "object" && msg.role.email
-      ).length + 1;
+      chatHistory.filter((msg) => msg.role !== "assistant").length + 1;
+
+    const historyBlock = conversationHistory
+      ? `TIDIGARE KONVERSATION (${userMessageCount} användarmeddelanden hittills):\n${conversationHistory}\n\n`
+      : "";
 
     const systemPrompt = getSystemPrompt(userMessageCount);
 
     const fullPrompt = `${systemPrompt}
+      ${historyBlock}NYTT MEDDELANDE FRÅN ANVÄNDARE:
+      ${userMessage}
 
-TIDIGARE KONVERSATION (${userMessageCount} användarmeddelanden hittills):
-${conversationHistory}
-
-NYTT MEDDELANDE FRÅN ANVÄNDARE:
-${userMessage}
-
-Svara nu som OTAI, den arbetsterapeutiska AI-assistenten:`;
+      Svara nu som OTAI, den arbetsterapeutiska AI-assistenten:`;
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    const text = response.text();
-
-    return text;
+    return response.text();
   } catch (error) {
     console.error("❌ Gemini API error:", error);
     console.error("Error details:", {
@@ -239,7 +234,6 @@ Svara nu som OTAI, den arbetsterapeutiska AI-assistenten:`;
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    // Handle specific error cases
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
