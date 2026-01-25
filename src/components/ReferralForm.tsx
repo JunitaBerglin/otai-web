@@ -38,6 +38,7 @@ export function ReferralForm({
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Form state
   const [formData, setFormData] = useState<Partial<ReferralFormType>>({
@@ -106,6 +107,7 @@ export function ReferralForm({
 
     setIsSubmitting(true);
     setError("");
+    setSuccessMessage("");
 
     try {
       const conversationSummary = {
@@ -123,9 +125,11 @@ export function ReferralForm({
       let icfDraft: ReferralDraftICF | undefined = undefined;
 
       try {
+        console.log("🔄 Generating ICF draft...");
         icfDraft = await generateReferralDraftICF(conversationMessages);
+        console.log("✅ ICF draft generated successfully");
       } catch (e) {
-        console.warn("Kunde inte generera ICF-draft, skickar remiss utan:", e);
+        console.warn("⚠️ Kunde inte generera ICF-draft, skickar remiss utan:", e);
       }
 
       const referral: ReferralFormType = {
@@ -145,10 +149,23 @@ export function ReferralForm({
         icfDraft,
       };
 
+      console.log("📤 Submitting referral...");
       await onSubmit(referral);
+      
+      setSuccessMessage("✅ Remissen har skickats! Arbetsterapeuten kommer att kontakta dig inom kort.");
+      
+      // Close form after 3 seconds
+      setTimeout(() => {
+        onCancel();
+      }, 3000);
+      
     } catch (err) {
-      console.error("Error submitting referral:", err);
-      setError("Ett fel uppstod när remissen skulle skickas. Försök igen.");
+      console.error("❌ Error submitting referral:", err);
+      setError(
+        err instanceof Error 
+          ? err.message 
+          : "Ett fel uppstod när remissen skulle skickas. Försök igen."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -207,6 +224,15 @@ export function ReferralForm({
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {successMessage && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                {successMessage}
               </AlertDescription>
             </Alert>
           )}
@@ -707,23 +733,23 @@ export function ReferralForm({
             <Button
               variant="outline"
               onClick={step === 1 ? onCancel : handleBack}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!successMessage}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {step === 1 ? "Avbryt" : "Tillbaka"}
             </Button>
 
             {step < totalSteps ? (
-              <Button onClick={handleNext}>
+              <Button onClick={handleNext} disabled={isSubmitting || !!successMessage}>
                 Nästa
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!formData.consentGiven || isSubmitting}
+                disabled={!formData.consentGiven || isSubmitting || !!successMessage}
               >
-                {isSubmitting ? "Skickar..." : "Skicka Remiss"}
+                {isSubmitting ? "Skickar..." : successMessage ? "Skickat!" : "Skicka Remiss"}
               </Button>
             )}
           </div>

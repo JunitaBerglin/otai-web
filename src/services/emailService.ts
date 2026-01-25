@@ -14,8 +14,16 @@ interface EmailResult {
 
 export async function sendReferral(referral: ReferralForm): Promise<EmailResult> {
   try {
+    console.log("🔧 Attempting to send referral...");
+    console.log("EmailJS Config:", {
+      serviceId: EMAILJS_SERVICE_ID,
+      templateId: EMAILJS_TEMPLATE_ID,
+      publicKey: EMAILJS_PUBLIC_KEY ? "SET" : "MISSING",
+      therapistEmail: THERAPIST_EMAIL
+    });
+
     if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-      console.warn("EmailJS not configured. Would send referral:", referral);
+      console.error("❌ EmailJS not configured properly");
       return {
         success: false,
         error: "Email-tjänsten är inte konfigurerad. Kontakta support.",
@@ -23,10 +31,13 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
     }
 
     if (!THERAPIST_EMAIL.includes("@")) {
+      console.error("❌ Invalid therapist email");
       return { success: false, error: "Felaktig mottagaradress för remiss." };
     }
 
+    // Dynamically import EmailJS to avoid build issues
     const emailjs = await import("@emailjs/browser");
+    console.log("✅ EmailJS loaded successfully");
 
     const subject = `Ny Remiss: ${referral.patientInfo.name} (${getUrgencyText(
       referral.urgency
@@ -61,15 +72,11 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       }
     
       return lines.join("\n");
-    }    
+    }
 
     const emailParams = {
       to_email: THERAPIST_EMAIL,
       subject,
-
-      name: referral.patientInfo.name,
-      title: subject,
-
       patient_name: referral.patientInfo.name,
       patient_email: referral.patientInfo.email,
       patient_phone: referral.patientInfo.phone,
@@ -108,6 +115,12 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       referral_id: referral.id,
     };
 
+    console.log("📧 Sending email with params:", {
+      to: emailParams.to_email,
+      subject: emailParams.subject,
+      patientName: emailParams.patient_name
+    });
+
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
@@ -115,22 +128,32 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       EMAILJS_PUBLIC_KEY
     );
 
+    console.log("📬 EmailJS response:", response);
+
     if (response.status === 200 || response.text === "OK") {
-      console.log("Referral sent successfully:", referral.id);
+      console.log("✅ Referral sent successfully:", referral.id);
       return { success: true };
     }
 
-    console.error("EmailJS response not OK:", response);
+    console.error("❌ EmailJS response not OK:", response);
     return {
       success: false,
       error: "Det gick inte att skicka remissen. Försök igen senare.",
     };
   } catch (error) {
-    console.error("Error sending referral:", error);
+    console.error("❌ Error sending referral:", error);
+    
+    // Detailed error logging
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    
     return {
       success: false,
-      error:
-        "Ett oväntat fel uppstod. Kontrollera din internetanslutning och försök igen.",
+      error: error instanceof Error 
+        ? `Ett fel uppstod: ${error.message}` 
+        : "Ett oväntat fel uppstod. Kontrollera din internetanslutning och försök igen.",
     };
   }
 }
