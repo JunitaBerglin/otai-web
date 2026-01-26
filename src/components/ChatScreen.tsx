@@ -191,12 +191,14 @@ export function ChatScreen({
       // Get AI response from Gemini
       const aiResponse = await sendMessageToGemini(userMessage, messages);
 
-      // Check if AI suggested escalation (before removing the marker)
+      // Check if AI suggested escalation or confirmed referral
       const shouldEscalate = aiResponse.includes("[ESKALERING_FÖRESLAGEN]");
+      const referralConfirmed = aiResponse.includes("[REMISS_BEKRÄFTAD]");
 
-      // Remove the escalation marker from the displayed message
+      // Remove markers from displayed message
       const cleanedResponse = aiResponse
         .replace("[ESKALERING_FÖRESLAGEN]", "")
+        .replace("[REMISS_BEKRÄFTAD]", "")
         .trim();
 
       // Create AI message
@@ -215,9 +217,37 @@ export function ChatScreen({
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
 
-      // Set escalation flag if marker was found
+      // Handle escalation flags
       if (shouldEscalate) {
         setEscalationSuggested(true);
+      }
+
+      // If user confirmed referral, open form automatically
+      if (referralConfirmed) {
+        setEscalationSuggested(true);
+
+        // Add a message explaining what will happen
+        const reminderMsg: message = {
+          id: crypto.randomUUID(),
+          content:
+            "📋 Formuläret för remissen öppnas om några sekunder. Ta gärna tid att läsa igenom mitt svar ovan först.",
+          role: {
+            id: "otai",
+            email: "ai@otai.se",
+            name: "OTAI",
+            userType: "provider",
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        const messagesWithReminder = [...finalMessages, reminderMsg];
+        setMessages(messagesWithReminder);
+        saveActiveSession(user.id, messagesWithReminder);
+
+        // Open form after 10 seconds
+        setTimeout(() => {
+          setShowReferralForm(true);
+        }, 10000);
       }
 
       // Save to active session
@@ -259,28 +289,55 @@ export function ChatScreen({
       referral.status = "submitted";
       saveReferral(referral);
 
+      // Show processing message
+      const processingMsg: message = {
+        id: crypto.randomUUID(),
+        content: "⏳ Skickar din remiss till våra legitimerade arbetsterapeuter...",
+        role: {
+          id: "system",
+          email: "system@otai.se",
+          name: "OTAI",
+          userType: "provider",
+        },
+        timestamp: new Date().toISOString(),
+      };
+      
+      const updatedMessagesProcessing = [...messages, processingMsg];
+      setMessages(updatedMessagesProcessing);
+      saveActiveSession(user.id, updatedMessagesProcessing);
+
       // Send email
+      console.log("📤 Attempting to send referral via email...");
       const result = await sendReferral(referral);
 
       if (result.success) {
         // Update status to sent
         updateReferralStatus(referral.id, "sent");
 
-        // Add confirmation message to chat
+        // Add success message to chat
         const confirmationMsg: message = {
           id: crypto.randomUUID(),
-          content:
-            "✅ Din remiss har skickats till vårt team av legitimerade arbetsterapeuter. De kommer att kontakta dig inom kort.",
+          content: `✅ **Remissen har skickats!**
+
+Din remiss (ID: ${referral.id.substring(0, 8)}) har nu skickats till vårt team av legitimerade arbetsterapeuter på otairemiss@gmail.com. 
+
+**Vad händer nu?**
+• En arbetsterapeut kommer att granska din remiss inom ${getReferralResponseTime(referral.urgency)}
+• Du kommer att kontaktas via ${referral.patientInfo.email} eller ${referral.patientInfo.phone}
+• Om du inte hör av oss inom förväntad tid, kontakta otairemiss@gmail.com
+
+**Ditt remiss-ID:** ${referral.id.substring(0, 8)}
+Spara detta ID för framtida referens.`,
           role: {
             id: "system",
             email: "system@otai.se",
-            name: "System",
+            name: "OTAI",
             userType: "provider",
           },
           timestamp: new Date().toISOString(),
         };
 
-        const updatedMessages = [...messages, confirmationMsg];
+        const updatedMessages = [...updatedMessagesProcessing.slice(0, -1), confirmationMsg];
         setMessages(updatedMessages);
         saveActiveSession(user.id, updatedMessages);
 
@@ -294,20 +351,26 @@ export function ChatScreen({
         // Show error message
         const errorMsg: message = {
           id: crypto.randomUUID(),
-          content: `❌ ${
-            result.error ||
-            "Kunde inte skicka remissen. Den har sparats som utkast."
-          }`,
+          content: `❌ **Remissen kunde inte skickas**
+
+${result.error || "Ett tekniskt fel uppstod när remissen skulle skickas."}
+
+**Vad kan du göra?**
+• Kontrollera din internetanslutning och försök igen
+• Kontakta oss direkt via email: otairemiss@gmail.com
+• Ange ditt remiss-ID: ${referral.id.substring(0, 8)}
+
+Din remiss har sparats som utkast och ingen information har förlorats.`,
           role: {
             id: "system",
             email: "system@otai.se",
-            name: "System",
+            name: "OTAI",
             userType: "provider",
           },
           timestamp: new Date().toISOString(),
         };
 
-        const updatedMessages = [...messages, errorMsg];
+        const updatedMessages = [...updatedMessagesProcessing.slice(0, -1), errorMsg];
         setMessages(updatedMessages);
         saveActiveSession(user.id, updatedMessages);
 
@@ -315,6 +378,44 @@ export function ChatScreen({
       }
     } catch (error) {
       console.error("Error handling referral:", error);
+      
+      updateReferralStatus(referral.id, "failed");
+
+      const errorMsg: message = {
+        id: crypto.randomUUID(),
+        content: `❌ **Ett oväntat fel uppstod**
+
+Vi kunde inte behandla din remiss på grund av ett tekniskt problem.
+
+**Kontakta oss direkt:**
+• Email: otairemiss@gmail.com
+• Remiss-ID: ${referral.id.substring(0, 8)}
+
+Vi hjälper dig att få kontakt med en arbetsterapeut.`,
+        role: {
+          id: "system",
+          email: "system@otai.se",
+          name: "OTAI",
+          userType: "provider",
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, errorMsg]);
+      setShowReferralForm(false);
+    }
+  };
+
+  const getReferralResponseTime = (urgency: "low" | "medium" | "high"): string => {
+    switch (urgency) {
+      case "high":
+        return "1-2 arbetsdagar";
+      case "medium":
+        return "3-5 arbetsdagar";
+      case "low":
+        return "5-10 arbetsdagar";
+      default:
+        return "5 arbetsdagar";
     }
   };
 

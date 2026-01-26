@@ -207,9 +207,9 @@ export function ReferralForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-2xl my-8">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-2xl my-8 bg-white shadow-2xl">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/10 border-b">
           <CardTitle className="text-primary text-xl sm:text-2xl">
             Remiss till Legitimerad Arbetsterapeut
           </CardTitle>

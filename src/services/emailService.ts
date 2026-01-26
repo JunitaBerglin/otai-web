@@ -22,11 +22,12 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
       therapistEmail: THERAPIST_EMAIL
     });
 
+    // Validate configuration
     if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
       console.error("❌ EmailJS not configured properly");
       return {
         success: false,
-        error: "Email-tjänsten är inte konfigurerad. Kontakta support.",
+        error: "Email-tjänsten är inte konfigurerad. Kontakta support på otairemiss@gmail.com.",
       };
     }
 
@@ -38,6 +39,10 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
     // Dynamically import EmailJS to avoid build issues
     const emailjs = await import("@emailjs/browser");
     console.log("✅ EmailJS loaded successfully");
+
+    // Initialize EmailJS with public key
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    console.log("✅ EmailJS initialized with public key");
 
     const subject = `Ny Remiss: ${referral.patientInfo.name} (${getUrgencyText(
       referral.urgency
@@ -118,14 +123,15 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
     console.log("📧 Sending email with params:", {
       to: emailParams.to_email,
       subject: emailParams.subject,
-      patientName: emailParams.patient_name
+      patientName: emailParams.patient_name,
+      serviceId: EMAILJS_SERVICE_ID,
+      templateId: EMAILJS_TEMPLATE_ID
     });
 
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
-      emailParams,
-      EMAILJS_PUBLIC_KEY
+      emailParams
     );
 
     console.log("📬 EmailJS response:", response);
@@ -138,7 +144,7 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
     console.error("❌ EmailJS response not OK:", response);
     return {
       success: false,
-      error: "Det gick inte att skicka remissen. Försök igen senare.",
+      error: `Det gick inte att skicka remissen. Status: ${response.status}. Kontakta otairemiss@gmail.com.`,
     };
   } catch (error) {
     console.error("❌ Error sending referral:", error);
@@ -152,7 +158,7 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
     return {
       success: false,
       error: error instanceof Error 
-        ? `Ett fel uppstod: ${error.message}` 
+        ? `Ett fel uppstod vid sändning: ${error.message}. Kontakta otairemiss@gmail.com.` 
         : "Ett oväntat fel uppstod. Kontrollera din internetanslutning och försök igen.",
     };
   }
