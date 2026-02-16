@@ -50,31 +50,70 @@ export async function sendReferral(referral: ReferralForm): Promise<EmailResult>
 
     function formatIcfDraft(d: ReferralDraftICF): string {
       const lines: string[] = [];
-      lines.push(`ICF-OPTIMERAD HANDOVER (AUTOGENERERAD)`);
-      lines.push(`Problem: ${d.problemStatement}`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push(`ICF-OPTIMERAD BEDÖMNING (AUTOGENERERAD)`);
+      lines.push(`═══════════════════════════════════════`);
+      lines.push("");
+      lines.push(`📋 PROBLEMFORMULERING:`);
+      lines.push(`${d.problemStatement}`);
       lines.push("");
     
-      lines.push("b – Kroppsfunktioner:");
-      d.icf.bodyFunctions.forEach(x => lines.push(`- ${x.code} ${x.label} (q${x.qualifier})`));
+      lines.push(`🧠 KROPPSFUNKTIONER (b):`);
+      if (d.icf.bodyFunctions.length > 0) {
+        d.icf.bodyFunctions.forEach(x => {
+          const severity = x.qualifier === 0 ? "ingen svårighet" : 
+                          x.qualifier === 1 ? "lindrig svårighet" :
+                          x.qualifier === 2 ? "måttlig svårighet" :
+                          x.qualifier === 3 ? "svår svårighet" : "total svårighet";
+          lines.push(`  • ${x.code} - ${x.label} (${severity})`);
+        });
+      } else {
+        lines.push(`  Inga identifierade svårigheter`);
+      }
       lines.push("");
     
-      lines.push("d – Aktiviteter/Delaktighet:");
-      d.icf.activitiesParticipation.forEach(x => lines.push(`- ${x.code} ${x.label} (q${x.qualifier})`));
+      lines.push(`🏃 AKTIVITETER OCH DELAKTIGHET (d):`);
+      if (d.icf.activitiesParticipation.length > 0) {
+        d.icf.activitiesParticipation.forEach(x => {
+          const severity = x.qualifier === 0 ? "ingen svårighet" : 
+                          x.qualifier === 1 ? "lindrig svårighet" :
+                          x.qualifier === 2 ? "måttlig svårighet" :
+                          x.qualifier === 3 ? "svår svårighet" : "total svårighet";
+          lines.push(`  • ${x.code} - ${x.label} (${severity})`);
+        });
+      } else {
+        lines.push(`  Inga identifierade begränsningar`);
+      }
       lines.push("");
     
-      lines.push("e – Omgivningsfaktorer:");
-      d.icf.environmentalFactors.forEach(x => lines.push(`- ${x.code} ${x.label} (impact ${x.impact})`));
+      lines.push(`🌍 OMGIVNINGSFAKTORER (e):`);
+      if (d.icf.environmentalFactors.length > 0) {
+        d.icf.environmentalFactors.forEach(x => {
+          const impactText = x.impact < 0 ? `barriär (${x.impact})` : 
+                            x.impact > 0 ? `underlättare (+${x.impact})` : 
+                            `neutral (0)`;
+          lines.push(`  • ${x.code} - ${x.label} (${impactText})`);
+        });
+      } else {
+        lines.push(`  Inga identifierade omgivningsfaktorer`);
+      }
       lines.push("");
     
-      lines.push("Föreslagna arbetsterapeutiska insatser:");
-      d.suggestedInterventions.forEach(s => lines.push(`- ${s}`));
+      lines.push(`💡 FÖRESLAGNA ARBETSTERAPEUTISKA INSATSER:`);
+      if (d.suggestedInterventions.length > 0) {
+        d.suggestedInterventions.forEach((s, i) => lines.push(`  ${i + 1}. ${s}`));
+      } else {
+        lines.push(`  Inga förslag genererade`);
+      }
       lines.push("");
     
       if (d.missingInfoQuestions?.length) {
-        lines.push("Kompletterande frågor (vid behov):");
-        d.missingInfoQuestions.forEach(q => lines.push(`- ${q}`));
+        lines.push(`❓ KOMPLETTERANDE FRÅGOR (vid behov):`);
+        d.missingInfoQuestions.forEach((q, i) => lines.push(`  ${i + 1}. ${q}`));
         lines.push("");
       }
+      
+      lines.push(`═══════════════════════════════════════`);
     
       return lines.join("\n");
     }

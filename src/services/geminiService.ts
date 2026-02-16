@@ -308,56 +308,37 @@ export const generateReferralDraftICF = async (
 
   const icfShortlist = {
     bodyFunctions: [
-      { code: "b130", label: "Energy and drive functions" },
-      { code: "b140", label: "Attention functions" },
-      { code: "b144", label: "Memory functions" },
-      { code: "b152", label: "Emotional functions" },
-      { code: "b710", label: "Mobility of joint functions" },
-      { code: "b730", label: "Muscle power functions" },
+      { code: "b130", label: "Energi- och drivkraftsfunktioner" },
+      { code: "b140", label: "Uppmärksamhetsfunktioner" },
+      { code: "b144", label: "Minnesfunktioner" },
+      { code: "b152", label: "Emotionella funktioner" },
+      { code: "b710", label: "Ledrörlighet" },
+      { code: "b730", label: "Muskelstyrka" },
     ],
     activitiesParticipation: [
-      { code: "d230", label: "Carrying out daily routine" },
-      {
-        code: "d240",
-        label: "Handling stress and other psychological demands",
-      },
-      { code: "d410", label: "Changing basic body position" },
-      { code: "d450", label: "Walking" },
-      { code: "d510", label: "Washing oneself" },
-      { code: "d540", label: "Dressing" },
-      { code: "d550", label: "Eating" },
-      { code: "d570", label: "Looking after one's health" },
-      { code: "d620", label: "Acquisition of goods and services" },
-      { code: "d630", label: "Preparing meals" },
-      { code: "d640", label: "Doing housework" },
-      { code: "d850", label: "Remunerative employment" },
-      { code: "d920", label: "Recreation and leisure" },
+      { code: "d230", label: "Genomföra dagliga rutiner" },
+      { code: "d240", label: "Hantera stress och andra psykiska krav" },
+      { code: "d410", label: "Byta kroppsställning" },
+      { code: "d450", label: "Gå" },
+      { code: "d510", label: "Tvätta sig" },
+      { code: "d540", label: "Klä på sig" },
+      { code: "d550", label: "Äta" },
+      { code: "d570", label: "Ta hand om sin hälsa" },
+      { code: "d620", label: "Anskaffa varor och tjänster" },
+      { code: "d630", label: "Tillaga mat" },
+      { code: "d640", label: "Utföra hushållssysslor" },
+      { code: "d850", label: "Avlönat arbete" },
+      { code: "d920", label: "Rekreation och fritid" },
     ],
     environmentalFactors: [
-      {
-        code: "e110",
-        label: "Products or substances for personal consumption",
-      },
-      {
-        code: "e115",
-        label: "Products and technology for personal use in daily living",
-      },
-      {
-        code: "e120",
-        label:
-          "Products and technology for personal indoor and outdoor mobility",
-      },
-      {
-        code: "e150",
-        label: "Design, construction of buildings for public use",
-      },
-      {
-        code: "e155",
-        label: "Design, construction of buildings for private use",
-      },
-      { code: "e310", label: "Immediate family" },
-      { code: "e355", label: "Health professionals" },
-      { code: "e580", label: "Health services, systems and policies" },
+      { code: "e110", label: "Produkter för personlig konsumtion" },
+      { code: "e115", label: "Produkter och teknik för personligt bruk i dagligt liv" },
+      { code: "e120", label: "Produkter och teknik för personlig förflyttning inomhus och utomhus" },
+      { code: "e150", label: "Design och konstruktion av byggnader för allmänt bruk" },
+      { code: "e155", label: "Design och konstruktion av byggnader för privat bruk" },
+      { code: "e310", label: "Närmaste familjen" },
+      { code: "e355", label: "Hälso- och sjukvårdspersonal" },
+      { code: "e580", label: "Hälso- och sjukvårdstjänster, system och riktlinjer" },
     ],
   };
 
@@ -365,14 +346,16 @@ export const generateReferralDraftICF = async (
 Du är en legitimeringsnära arbetsterapeutisk AI som ska skapa en FÖRIFYLLD REMISS enligt ICF, baserad på en chatt.
 
 UPPGIFT:
-1) Sammanfatta problemet (problemStatement) i 1-2 meningar.
+1) Sammanfatta problemet (problemStatement) i 1-2 meningar PÅ SVENSKA.
 2) Välj relevanta ICF-koder ENDAST från listan nedan (ingen annan kod får förekomma).
 3) För varje vald kod:
-   - ange label (som i listan)
+   - ange label (exakt som i listan, PÅ SVENSKA)
    - ange qualifier (0-4) för b/d där 0=ingen svårighet, 4=total svårighet
    - ange impact (-4..+4) för e där -4=stark barriär, +4=stark underlättare
-4) Föreslå 3-6 arbetsterapeutiska insatser (suggestedInterventions) i punktform.
-5) Om något viktigt saknas, ställ MAX 3 kompletterande frågor i missingInfoQuestions. Om inget saknas: [].
+4) Föreslå 3-6 arbetsterapeutiska insatser (suggestedInterventions) i punktform PÅ SVENSKA.
+5) Om något viktigt saknas, ställ MAX 3 kompletterande frågor i missingInfoQuestions PÅ SVENSKA. Om inget saknas: [].
+
+VIKTIGT: Alla texter ska vara på SVENSKA!
 
 FORMATKRAV:
 - Du MÅSTE svara med ENDAST giltig JSON.
@@ -380,22 +363,20 @@ FORMATKRAV:
 - Följ exakt detta schema:
 
 {
-  "problemStatement": "string",
+  "problemStatement": "string (på svenska)",
   "icf": {
-    "bodyFunctions": [{"code":"b130","label":"...","qualifier":0}],
-    "activitiesParticipation": [{"code":"d230","label":"...","qualifier":0}],
-    "environmentalFactors": [{"code":"e115","label":"...","impact":0}]
+    "bodyFunctions": [{"code":"b130","label":"Energi- och drivkraftsfunktioner","qualifier":0}],
+    "activitiesParticipation": [{"code":"d230","label":"Genomföra dagliga rutiner","qualifier":0}],
+    "environmentalFactors": [{"code":"e115","label":"Produkter och teknik för personligt bruk i dagligt liv","impact":0}]
   },
-  "suggestedInterventions": ["..."],
-  "missingInfoQuestions": ["..."]
+  "suggestedInterventions": ["... (på svenska)"],
+  "missingInfoQuestions": ["... (på svenska)"]
 }
 
-ICF-LISTA (endast dessa är tillåtna):
-BODY FUNCTIONS: ${JSON.stringify(icfShortlist.bodyFunctions)}
-ACTIVITIES/PARTICIPATION: ${JSON.stringify(
-    icfShortlist.activitiesParticipation
-  )}
-ENVIRONMENTAL FACTORS: ${JSON.stringify(icfShortlist.environmentalFactors)}
+ICF-LISTA (endast dessa är tillåtna, SVENSKA texter):
+KROPPSFUNKTIONER (b): ${JSON.stringify(icfShortlist.bodyFunctions)}
+AKTIVITETER/DELAKTIGHET (d): ${JSON.stringify(icfShortlist.activitiesParticipation)}
+OMGIVNINGSFAKTORER (e): ${JSON.stringify(icfShortlist.environmentalFactors)}
 
 CHATTHISTORIK:
 ${conversation}
